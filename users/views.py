@@ -27,7 +27,7 @@ class UserView(APIView):
         return Response(serialized.data, status.HTTP_201_CREATED)
 
 
-class LoginView(APIView):
+""" class LoginView(APIView):
     def post(self, request: Request):
         serialized = LoginSerializer(data=request.data)
         serialized.is_valid(raise_exception=True)
@@ -41,4 +41,26 @@ class LoginView(APIView):
 
         token, _ = Token.objects.get_or_create(user=user)
 
-        return Response({"token": token.key}, status.HTTP_200_OK)
+        return Response({"token": token.key}, status.HTTP_200_OK) """
+
+class LoginView(APIView):
+    def post(self, request):
+
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = authenticate(
+            username = serializer.validated_data["email"],
+            password=serializer.validated_data["password"],
+        )
+
+        if user:
+
+            token, _ = Token.objects.get_or_create(user=user)
+
+            return Response({ "token": token.key })
+
+        return Response(
+            { "detail": "invalid username or password" },
+            status=status.HTTP_401_UNAUTHORIZED
+        )
