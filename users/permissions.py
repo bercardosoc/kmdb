@@ -7,6 +7,7 @@ class UserPermission(BasePermission):
 
         staff_methods = {
             "GET",
+            "POST"
         }
 
         if request.method in staff_methods:

@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView, Request, Response, status
@@ -11,6 +12,7 @@ from users.serializers import LoginSerializer, UserSerializer
 class UserView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [UserPermission]
+
 
     def get(self, _: Request):
         users = User.objects.all()
@@ -27,7 +29,7 @@ class UserView(APIView):
         return Response(serialized.data, status.HTTP_201_CREATED)
 
 
-""" class LoginView(APIView):
+class LoginView(APIView):
     def post(self, request: Request):
         serialized = LoginSerializer(data=request.data)
         serialized.is_valid(raise_exception=True)
@@ -41,26 +43,29 @@ class UserView(APIView):
 
         token, _ = Token.objects.get_or_create(user=user)
 
-        return Response({"token": token.key}, status.HTTP_200_OK) """
+        return Response({"token": token.key}, status.HTTP_200_OK)
 
-class LoginView(APIView):
-    def post(self, request):
+class UsersView(APIView):
 
-        serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [UserPermission]
 
-        user = authenticate(
-            username = serializer.validated_data["email"],
-            password=serializer.validated_data["password"],
-        )
+    def get(self, _: Request):
 
-        if user:
+        users = User.objects.all()
+        serialized = UserSerializer(instance=users, many=True)
 
-            token, _ = Token.objects.get_or_create(user=user)
+        return Response({
+            "users": serialized.data
+        }, status.HTTP_200_OK)
 
-            return Response({ "token": token.key })
+class UserViewDetail(APIView):
 
-        return Response(
-            { "detail": "invalid username or password" },
-            status=status.HTTP_401_UNAUTHORIZED
-        )
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [UserPermission]
+
+    def get(self, request, user_id):
+
+        user = get_object_or_404(User, pk=user_id)
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status.HTTP_200_OK)
