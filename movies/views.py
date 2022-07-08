@@ -9,19 +9,22 @@ from movies.serializers import MovieSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-class MovieView(APIView):
+from project.pagination import CustomPageNumberPagination
+
+class MovieView(APIView, CustomPageNumberPagination):
 
     authentication_classes = [TokenAuthentication]
     permission_classes = [MyCustomPermission]
 
-    def get(self, _: Request):
+    def get(self, request):
 
         movies = Movie.objects.all()
-        serialized = MovieSerializer(instance=movies, many=True)
 
-        return Response({
-            "movies": serialized.data
-        }, status.HTTP_200_OK)
+        result_page = self.paginate_queryset(movies, request, view=self)
+
+        serializer = MovieSerializer(result_page, many=True)
+
+        return self.get_paginated_response(serializer.data)
 
     def post(self, request: Request):
 

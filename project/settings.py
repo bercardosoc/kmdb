@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "users",
     "movies",
     "genres",
+    "reviews"
 ]
 
 MIDDLEWARE = [
@@ -148,4 +149,8 @@ SIMPLE_JWT = {
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
 
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',)
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'core.pagination.CustomPageNumberPagination',
 }

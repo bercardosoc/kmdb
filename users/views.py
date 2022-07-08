@@ -3,22 +3,24 @@ from django.shortcuts import get_object_or_404
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView, Request, Response, status
+from project.pagination import CustomPageNumberPagination
 
 from users.models import User
 from users.permissions import UserPermission
 from users.serializers import LoginSerializer, UserSerializer
 
 
-class UserView(APIView):
+class UserView(APIView, CustomPageNumberPagination):
+    
     authentication_classes = [TokenAuthentication]
     permission_classes = [UserPermission]
 
+    def get(self, request):
 
-    def get(self, _: Request):
         users = User.objects.all()
-        serialized = UserSerializer(users, many=True)
-
-        return Response(serialized.data, status.HTTP_200_OK)
+        result_page = self.paginate_queryset(users, request, view=self)
+        serializer = UserSerializer(result_page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     def post(self, request: Request):
         serialized = UserSerializer(data=request.data)
@@ -30,7 +32,9 @@ class UserView(APIView):
 
 
 class LoginView(APIView):
+    
     def post(self, request: Request):
+    
         serialized = LoginSerializer(data=request.data)
         serialized.is_valid(raise_exception=True)
 
